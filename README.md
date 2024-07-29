@@ -9,7 +9,9 @@ Based on https://github.com/Zipstack/structured-extraction
 Supported operating systems
 ---------------------------
 
-This code should run on Linux or macOS. Windows is not currently supported.
+This code should run on Linux or macOS. 
+
+Windows is not currently supported - however you can try this branch: https://github.com/ryanmcdonough/nda-extraction/tree/windows-support which is untested but should work fine on windows.
 
 Required API Keys
 -----------------
