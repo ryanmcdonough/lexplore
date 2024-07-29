@@ -5,6 +5,7 @@ This repository contains code for extracting structured data from multi-party No
 
 Based on https://github.com/Zipstack/structured-extraction
 
+
 Supported operating systems
 ---------------------------
 
@@ -13,7 +14,7 @@ This code should run on Linux or macOS. Windows is not currently supported.
 Required API Keys
 -----------------
 
-You'll need API keys for OpenAI and [LLMWhisperer](https://unstract.com/llmwhisperer/). You can obtain free keys for both services. Once you have the keys, add them to the `.env.example` file in the root of the project - and then rename to `.env`
+You'll need API keys for OpenAI and [LLMWhisperer](https://unstract.com/llmwhisperer/). You can obtain free keys for both services. Once you have the keys, add them to the `.env.example` file in the root of the project - then rename to `.env`
 
 Running the code
 ----------------
@@ -47,7 +48,7 @@ Running the code
 How it works
 ------------
 
-The script processes PDF files containing NDAs, extracts the text content, and uses a language model to parse the information into a structured format. It handles multi-party NDAs, extracting information about all parties involved, the effective date, term, confidentiality provisions, and governing law.
+The script processes PDF files containing NDAs, extracts the text content, and uses a language model to parse the information into a structured format. It handles multi-party NDAs, extracting comprehensive information about all aspects of the agreement.
 
 Output
 ------
@@ -57,13 +58,21 @@ For each processed NDA, the script generates a JSON file containing the extracte
 -   List of all parties involved, with their names, addresses, and roles
 -   Effective date of the NDA
 -   Term or duration of the NDA
--   Confidentiality provisions
+-   Confidentiality provisions, including exceptions and duration
 -   Governing law
+-   Purpose of the NDA
+-   Permitted use of confidential information
+-   Presence of non-solicitation and non-compete clauses
+-   Intellectual property provisions
+-   Requirements for returning or destroying confidential information
+-   Dispute resolution procedures
+-   Amendment provisions
+-   Presence of a severability clause
 
 Customization
 -------------
 
-You can modify the `ParsedNDA` class in the script to adjust the structure of the extracted data according to your specific needs.
+You can modify the `ParsedNDA` class in the script to adjust the structure of the extracted data according to your specific needs. The current implementation extracts a wide range of information, but you may want to add or remove fields based on your particular use case.
 
 Limitations
 -----------
@@ -71,6 +80,7 @@ Limitations
 -   The accuracy of the extraction depends on the quality of the input PDFs and the capabilities of the language model.
 -   Very complex or non-standard NDAs may not be parsed correctly.
 -   The script currently doesn't handle attachments or exhibits that might be part of the NDA.
+-   Some nuanced legal concepts may not be fully captured, and the tool should not be considered a substitute for legal review.
 
 Contributing
 ------------
@@ -85,4 +95,4 @@ MIT
 Disclaimer
 ----------
 
-This tool is for informational purposes only and should not be considered as legal advice. Always consult with a qualified legal professional for interpretation and application of NDAs.
+This tool is for informational purposes only and should not be considered as legal advice. While it aims to extract a comprehensive set of information from NDAs, it may not capture all nuances or legal implications. Always consult with a qualified legal professional for interpretation, application, and advice regarding NDAs.

@@ -30,7 +30,11 @@ class NDATerm(BaseModel):
 class ConfidentialityProvision(BaseModel):
     description: str = Field(description="Description of what is considered confidential information")
     exceptions: List[str] = Field(description="List of exceptions to confidential information")
+    duration: str = Field(description="Duration for which the confidentiality obligations last")
 
+class DisputeResolution(BaseModel):
+    method: str = Field(description="Method of dispute resolution (e.g., arbitration, litigation)")
+    venue: str = Field(description="Location or jurisdiction for dispute resolution")
 
 class ParsedNDA(BaseModel):
     parties: List[PartyInfo] = Field(description="List of all parties involved in the NDA")
@@ -39,7 +43,14 @@ class ParsedNDA(BaseModel):
     confidentiality_provision: ConfidentialityProvision = Field(description="Details about the confidentiality clause")
     governing_law: str = Field(description="The governing law or jurisdiction for the NDA")
     purpose: str = Field(description="The purpose or context of the NDA")
-
+    permitted_use: str = Field(description="Specific allowed uses of confidential information")
+    non_solicitation: bool = Field(description="Whether the NDA includes a non-solicitation clause")
+    non_compete: bool = Field(description="Whether the NDA includes a non-compete clause")
+    intellectual_property: str = Field(description="Provisions related to intellectual property rights")
+    return_of_information: str = Field(description="Requirements for returning or destroying confidential information")
+    dispute_resolution: DisputeResolution = Field(description="Details about dispute resolution procedures")
+    amendments: str = Field(description="Provisions for making amendments to the agreement")
+    severability: bool = Field(description="Whether the NDA includes a severability clause")
 
 def make_llm_whisperer_call(file_path):
     print(f"Processing file:{file_path}...")
