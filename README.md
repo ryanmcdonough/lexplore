@@ -24,26 +24,14 @@ Running the code
 1.  Clone this repository and navigate to the project directory.
 2.  Create and activate a Python virtual environment:
 
-    bash
-
-    Copy
-
     `python3 -m venv .venv
     source .venv/bin/activate`
 
 3.  Install the required dependencies:
 
-    bash
-
-    Copy
-
     `pip install -r requirements.txt`
 
 4.  Run the script:
-
-    bash
-
-    Copy
 
     `python extract.py <path to NDA PDF or directory with PDFs>`
 
