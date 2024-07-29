@@ -7,8 +7,7 @@ from typing import List
 
 import requests
 from dotenv import load_dotenv
-from langchain.prompts import SystemMessagePromptTemplate, ChatPromptTemplate, \
-    HumanMessagePromptTemplate
+from langchain.prompts import SystemMessagePromptTemplate, ChatPromptTemplate, HumanMessagePromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
