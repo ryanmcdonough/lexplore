@@ -1,30 +1,38 @@
 import hashlib
 import os
 import sys
+import platform
 from datetime import datetime
 from pathlib import Path
 from typing import List
 
 import requests
 from dotenv import load_dotenv
-from langchain.prompts import SystemMessagePromptTemplate, ChatPromptTemplate, HumanMessagePromptTemplate
+from langchain.prompts import SystemMessagePromptTemplate, ChatPromptTemplate, \
+    HumanMessagePromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 from unstract.llmwhisperer.client import LLMWhispererClient
 
+# Platform-specific setup
+IS_WINDOWS = platform.system().lower() == "windows"
+
+def get_temp_dir():
+    if IS_WINDOWS:
+        return os.environ.get('TEMP')
+    else:
+        return '/tmp'
 
 class PartyInfo(BaseModel):
     name: str = Field(description="Name of the party")
     address: str = Field(description="Full address of the party")
     role: str = Field(description="Role of the party in the NDA (e.g., 'Disclosing Party', 'Receiving Party', or 'Both')")
 
-
 class NDATerm(BaseModel):
     start_date: datetime = Field(description="The start date of the NDA")
     end_date: datetime = Field(description="The end date of the NDA, if specified")
     duration: str = Field(description="The duration of the NDA, if specified instead of an end date")
-
 
 class ConfidentialityProvision(BaseModel):
     description: str = Field(description="Description of what is considered confidential information")
@@ -52,12 +60,11 @@ class ParsedNDA(BaseModel):
     severability: bool = Field(description="Whether the NDA includes a severability clause")
 
 def make_llm_whisperer_call(file_path):
-    print(f"Processing file:{file_path}...")
+    print(f"Processing file: {file_path}...")
     # LLMWhisperer API key is picked up from the environment variable
     client = LLMWhispererClient()
     result = client.whisper(file_path=file_path, processing_mode="ocr", output_mode="line-printer")
     return result["extracted_text"]
-
 
 def generate_cache_file_name(file_path):
     # For our use case, PDFs won't be less than 4096, practically speaking.
@@ -67,64 +74,52 @@ def generate_cache_file_name(file_path):
         first_block = f.read(4096)
         # seek to the last block
         f.seek(-4096, os.SEEK_END)
-        f.read(4096)
         last_block = f.read(4096)
 
     first_md5_hash = hashlib.md5(first_block).hexdigest()
     last_md5_hash = hashlib.md5(last_block).hexdigest()
-    return f"/tmp/{first_md5_hash}_{last_md5_hash}.txt"
-
+    return os.path.join(get_temp_dir(), f"{first_md5_hash}_{last_md5_hash}.txt")
 
 def is_file_cached(file_path):
     cache_file_name = generate_cache_file_name(file_path)
     cache_file = Path(cache_file_name)
-    if cache_file.is_file():
-        return True
-    else:
-        return False
-
+    return cache_file.is_file()
 
 def extract_text(file_path):
     if is_file_cached(file_path):
         print(f"Info: File {file_path} is already cached.")
         cache_file_name = generate_cache_file_name(file_path)
-        with open(cache_file_name, "r") as f:
+        with open(cache_file_name, "r", newline='') as f:
             return f.read()
     else:
         data = make_llm_whisperer_call(file_path)
         cache_file_name = generate_cache_file_name(file_path)
-        with open(cache_file_name, "w") as f:
+        with open(cache_file_name, "w", newline='') as f:
             f.write(data)
         return data
-
 
 def error_exit(error_message):
     print(error_message)
     sys.exit(1)
 
-
 def show_usage_and_exit():
     error_exit("Please pass name of directory or file to process.")
-
 
 def enumerate_pdf_files(file_path):
     files_to_process = []
     # Users can pass a directory or a file name
     if os.path.isfile(file_path):
-        if os.path.splitext(file_path)[1][1:].strip().lower() == 'pdf':
+        if Path(file_path).suffix.lower() == '.pdf':
             files_to_process.append(file_path)
     elif os.path.isdir(file_path):
-        files = os.listdir(file_path)
-        for file_name in files:
+        for file_name in os.listdir(file_path):
             full_file_path = os.path.join(file_path, file_name)
-            if os.path.isfile(full_file_path):
-                if os.path.splitext(file_name)[1][1:].strip().lower() == 'pdf':
-                    files_to_process.append(full_file_path)
+            if os.path.isfile(full_file_path) and Path(full_file_path).suffix.lower() == '.pdf':
+                files_to_process.append(full_file_path)
     else:
         error_exit(f"Error. {file_path} should be a file or a directory.")
 
     return files_to_process
-
 
 def extract_values_from_file(raw_file_data):
     preamble = ("\n"
@@ -155,16 +150,14 @@ def extract_values_from_file(raw_file_data):
     print(result.content)
     return result.content
 
-
 def process_pdf_files(file_list):
     for file_path in file_list:
         raw_file_data = extract_text(file_path)
         print(f"Extracted text for file {file_path}:\n{raw_file_data}")
         extracted_json = extract_values_from_file(raw_file_data)
         json_file_path = f"{file_path}.json"
-        with open(json_file_path, "w") as f:
+        with open(json_file_path, "w", newline='') as f:
             f.write(extracted_json)
-
 
 def main():
     load_dotenv()
@@ -174,9 +167,11 @@ def main():
     print(f"Processing path {sys.argv[1]}...")
     file_list = enumerate_pdf_files(sys.argv[1])
     print(f"Processing {len(file_list)} files...")
-    print(f"Processing first file: {file_list[0]}...")
-    process_pdf_files(file_list)
-
+    if file_list:
+        print(f"Processing first file: {file_list[0]}...")
+        process_pdf_files(file_list)
+    else:
+        print("No PDF files found to process.")
 
 if __name__ == '__main__':
     main()
