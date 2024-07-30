@@ -1,0 +1,112 @@
+{
+    "ParsedNDA": {
+      "parties": {
+        "type": "List[PartyInfo]",
+        "description": "List of all parties involved in the NDA"
+      },
+      "effective_date": {
+        "type": "datetime",
+        "description": "The effective date of the NDA"
+      },
+      "nda_term": {
+        "type": "NDATerm",
+        "description": "The term or duration of the NDA"
+      },
+      "confidentiality_provision": {
+        "type": "ConfidentialityProvision",
+        "description": "Details about the confidentiality clause"
+      },
+      "governing_law": {
+        "type": "str",
+        "description": "The governing law or jurisdiction for the NDA"
+      },
+      "purpose": {
+        "type": "str",
+        "description": "The purpose or context of the NDA"
+      },
+      "permitted_use": {
+        "type": "str",
+        "description": "Specific allowed uses of confidential information"
+      },
+      "non_solicitation": {
+        "type": "bool",
+        "description": "Whether the NDA includes a non-solicitation clause"
+      },
+      "non_compete": {
+        "type": "bool",
+        "description": "Whether the NDA includes a non-compete clause"
+      },
+      "intellectual_property": {
+        "type": "str",
+        "description": "Provisions related to intellectual property rights"
+      },
+      "return_of_information": {
+        "type": "str",
+        "description": "Requirements for returning or destroying confidential information"
+      },
+      "dispute_resolution": {
+        "type": "DisputeResolution",
+        "description": "Details about dispute resolution procedures"
+      },
+      "amendments": {
+        "type": "str",
+        "description": "Provisions for making amendments to the agreement"
+      },
+      "severability": {
+        "type": "bool",
+        "description": "Whether the NDA includes a severability clause"
+      }
+    },
+    "PartyInfo": {
+      "name": {
+        "type": "str",
+        "description": "Name of the party"
+      },
+      "address": {
+        "type": "str",
+        "description": "Full address of the party"
+      },
+      "role": {
+        "type": "str",
+        "description": "Role of the party in the NDA (e.g., 'Disclosing Party', 'Receiving Party', or 'Both')"
+      }
+    },
+    "NDATerm": {
+      "start_date": {
+        "type": "datetime",
+        "description": "The start date of the NDA"
+      },
+      "end_date": {
+        "type": "datetime",
+        "description": "The end date of the NDA, if specified"
+      },
+      "duration": {
+        "type": "str",
+        "description": "The duration of the NDA, if specified instead of an end date"
+      }
+    },
+    "ConfidentialityProvision": {
+      "description": {
+        "type": "str",
+        "description": "Description of what is considered confidential information"
+      },
+      "exceptions": {
+        "type": "List[str]",
+        "description": "List of exceptions to confidential information"
+      },
+      "duration": {
+        "type": "str",
+        "description": "Duration for which the confidentiality obligations last"
+      }
+    },
+    "DisputeResolution": {
+      "method": {
+        "type": "str",
+        "description": "Method of dispute resolution (e.g., arbitration, litigation)"
+      },
+      "venue": {
+        "type": "str",
+        "description": "Location or jurisdiction for dispute resolution"
+      }
+    }
+  }

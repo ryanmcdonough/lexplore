@@ -1,98 +1,119 @@
-Extracting Structured JSON from NDAs with Langchain and Pydantic
-============================================================================
+# Extracting Structured JSON from NDAs with Langchain and Pydantic
 
 This repository contains code for extracting structured data from multi-party Non-Disclosure Agreements (NDAs) using Large Language Models (LLMs). We use Langchain to create prompts and Pydantic to ensure the extracted data conforms to our defined schema.
 
 Based on https://github.com/Zipstack/structured-extraction
 
+## Supported operating systems
 
-Supported operating systems
----------------------------
+This code should run on Linux, macOS. Windows is currently untested in a seperate branch.
 
-This code should run on Linux or macOS. Windows is not currently supported.
+## Required API Keys
 
-Required API Keys
------------------
+You'll need API keys for OpenAI and [LLMWhisperer](https://unstract.com/llmwhisperer/). You can obtain free keys for both services. Once you have the keys, add them to the `.env.example` file in the root of the project - then rename to `.env`
 
-You'll need API keys for OpenAI and [LLMWhisperer](https://unstract.com/llmwhisperer/). You can obtain free keys for both services. Once you have the keys, add them to the `.env.example` file in the root of the project - then rename to `.env`
+## Project Structure
 
-Running the code
-----------------
+```
 
-1.  Clone this repository and navigate to the project directory.
-2.  Create and activate a Python virtual environment:
+project_root/
 
-    bash
+├── nda_extractor.py
 
-    Copy
+├── schemas/
 
-    `python3 -m venv .venv
-    source .venv/bin/activate`
+│   ├── definitions/
 
-3.  Install the required dependencies:
+│   │   └── nda.json
 
-    bash
+│   └── prompts/
 
-    Copy
+│       └── nda.json
 
-    `pip install -r requirements.txt`
+├── .env
 
-4.  Run the script:
+├── requirements.txt
 
-    bash
+└── README.md
 
-    Copy
+```
 
-    `python extract.py <path to NDA PDF or directory with PDFs>`
+## Running the code
 
-How it works
-------------
+1\. Clone this repository and navigate to the project directory.
+
+2\. Create and activate a Python virtual environment:
+
+   ```bash
+
+   python3 -m venv .venv
+
+   source .venv/bin/activate
+
+   ```
+
+3\. Install the required dependencies:
+
+   ```bash
+
+   pip install -r requirements.txt
+
+   ```
+
+4\. Run the script:
+
+   ```bash
+
+   python nda_extractor.py <path_to_pdf_or_directory> <schema_file_name>
+
+   ```
+
+   For example:
+
+   ```bash
+
+   python nda_extractor.py ./ndas nda.json
+
+   ```
+
+## How it works
 
 The script processes PDF files containing NDAs, extracts the text content, and uses a language model to parse the information into a structured format. It handles multi-party NDAs, extracting comprehensive information about all aspects of the agreement.
 
-Output
-------
+The script now uses customisable schema and prompt configurations, which are loaded from JSON files in the `schemas/definitions/` and `schemas/prompts/` directories, respectively.
 
-For each processed NDA, the script generates a JSON file containing the extracted information, including:
+## Output
 
--   List of all parties involved, with their names, addresses, and roles
--   Effective date of the NDA
--   Term or duration of the NDA
--   Confidentiality provisions, including exceptions and duration
--   Governing law
--   Purpose of the NDA
--   Permitted use of confidential information
--   Presence of non-solicitation and non-compete clauses
--   Intellectual property provisions
--   Requirements for returning or destroying confidential information
--   Dispute resolution procedures
--   Amendment provisions
--   Presence of a severability clause
+For each processed NDA, the script generates a JSON file containing the extracted information. The structure of this information is defined in the schema file (`schemas/definitions/nda.json`).
 
-Customization
--------------
+## Customisation
 
-You can modify the `ParsedNDA` class in the script to adjust the structure of the extracted data according to your specific needs. The current implementation extracts a wide range of information, but you may want to add or remove fields based on your particular use case.
+You can customise both the data structure and the prompts used for extraction:
 
-Limitations
------------
+1\. To modify the structure of the extracted data, edit the `schemas/definitions/nda.json` file.
 
--   The accuracy of the extraction depends on the quality of the input PDFs and the capabilities of the language model.
--   Very complex or non-standard NDAs may not be parsed correctly.
--   The script currently doesn't handle attachments or exhibits that might be part of the NDA.
--   Some nuanced legal concepts may not be fully captured, and the tool should not be considered a substitute for legal review.
+2\. To adjust the prompts used by the language model, edit the `schemas/prompts/nda.json` file.
 
-Contributing
-------------
+You can create multiple schema and prompt configurations for different types of documents by adding new JSON files to these directories and specifying the file name when running the script.
+
+## Limitations
+
+- The accuracy of the extraction depends on the quality of the input PDFs and the capabilities of the language model.
+
+- Very complex or non-standard NDAs may not be parsed correctly.
+
+- The script currently doesn't handle attachments or exhibits that might be part of the NDA.
+
+- Some nuanced legal concepts may not be fully captured, and the tool should not be considered a substitute for legal review.
+
+## Contributing
 
 Contributions to improve the script or extend its capabilities are welcome. Please submit a pull request or open an issue to discuss proposed changes.
 
-License
--------
+## Licence
 
 MIT
 
-Disclaimer
-----------
+## Disclaimer
 
 This tool is for informational purposes only and should not be considered as legal advice. While it aims to extract a comprehensive set of information from NDAs, it may not capture all nuances or legal implications. Always consult with a qualified legal professional for interpretation, application, and advice regarding NDAs.
