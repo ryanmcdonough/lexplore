@@ -6,75 +6,47 @@ Based on https://github.com/Zipstack/structured-extraction
 
 ## Supported operating systems
 
-This code should run on Linux, macOS. Windows is currently untested in a seperate branch.
+This code should run on Linux, macOS. Windows is untested, however work is on to solved this.
 
 ## Required API Keys
 
-You'll need API keys for OpenAI and [LLMWhisperer](https://unstract.com/llmwhisperer/). You can obtain free keys for both services. Once you have the keys, add them to the `.env.example` file in the root of the project - then rename to `.env`
+You'll need API keys for OpenAI and [LLMWhisperer](https://unstract.com/llmwhisperer/). Once you have the keys, add them to the `.env.example` file in the root of the project - then rename to `.env`
 
 ## Project Structure
 
 ```
-
 project_root/
-
 ├── nda_extractor.py
-
 ├── schemas/
-
-│   ├── definitions/
-
-│   │   └── nda.json
-
-│   └── prompts/
-
-│       └── nda.json
-
+│   ├── definitions/
+│   │   └── nda.json
+│   └── prompts/
+│       └── nda.json
 ├── .env
-
 ├── requirements.txt
-
 └── README.md
-
 ```
 
 ## Running the code
 
-1\. Clone this repository and navigate to the project directory.
-
-2\. Create and activate a Python virtual environment:
-
-   ```bash
-
-   python3 -m venv .venv
-
-   source .venv/bin/activate
-
-   ```
-
-3\. Install the required dependencies:
-
-   ```bash
-
-   pip install -r requirements.txt
-
-   ```
-
-4\. Run the script:
-
-   ```bash
-
-   python nda_extractor.py <path_to_pdf_or_directory> <schema_file_name>
-
-   ```
-
-   For example:
-
-   ```bash
-
-   python nda_extractor.py ./ndas nda.json
-
-   ```
+1. Clone this repository and navigate to the project directory.
+2. Create and activate a Python virtual environment:
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+3. Install the required dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Run the script:
+   ```bash
+   python extract.py <path_to_pdf_or_directory> <schema_file_name>
+   ```
+   For example:
+   ```bash
+   python extract.py ./example/nda.pdf nda.json
+   ```
 
 ## How it works
 
@@ -90,20 +62,15 @@ For each processed NDA, the script generates a JSON file containing the extracte
 
 You can customise both the data structure and the prompts used for extraction:
 
-1\. To modify the structure of the extracted data, edit the `schemas/definitions/nda.json` file.
-
-2\. To adjust the prompts used by the language model, edit the `schemas/prompts/nda.json` file.
+1. To modify the structure of the extracted data, edit the `schemas/definitions/nda.json` file.
+2. To adjust the prompts used by the language model, edit the `schemas/prompts/nda.json` file.
 
 You can create multiple schema and prompt configurations for different types of documents by adding new JSON files to these directories and specifying the file name when running the script.
 
 ## Limitations
 
 - The accuracy of the extraction depends on the quality of the input PDFs and the capabilities of the language model.
-
 - Very complex or non-standard NDAs may not be parsed correctly.
-
-- The script currently doesn't handle attachments or exhibits that might be part of the NDA.
-
 - Some nuanced legal concepts may not be fully captured, and the tool should not be considered a substitute for legal review.
 
 ## Contributing
