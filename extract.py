@@ -1,55 +1,35 @@
 import hashlib
 import os
 import sys
+import json
 from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import List, Dict, Any
 
 import requests
 from dotenv import load_dotenv
 from langchain.prompts import SystemMessagePromptTemplate, ChatPromptTemplate, HumanMessagePromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain.output_parsers import PydanticOutputParser
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, create_model
 from unstract.llmwhisperer.client import LLMWhispererClient
 
+def load_json_file(file_path: str) -> Dict[str, Any]:
+    with open(file_path, 'r') as f:
+        return json.load(f)
 
-class PartyInfo(BaseModel):
-    name: str = Field(description="Name of the party")
-    address: str = Field(description="Full address of the party")
-    role: str = Field(description="Role of the party in the NDA (e.g., 'Disclosing Party', 'Receiving Party', or 'Both')")
+def create_pydantic_model(name: str, schema: Dict[str, Any]) -> BaseModel:
+    fields = {}
+    for field_name, field_info in schema.items():
+        field_type = eval(field_info['type'])
+        fields[field_name] = (field_type, Field(description=field_info['description']))
+    return create_model(name, **fields)
 
-
-class NDATerm(BaseModel):
-    start_date: datetime = Field(description="The start date of the NDA")
-    end_date: datetime = Field(description="The end date of the NDA, if specified")
-    duration: str = Field(description="The duration of the NDA, if specified instead of an end date")
-
-
-class ConfidentialityProvision(BaseModel):
-    description: str = Field(description="Description of what is considered confidential information")
-    exceptions: List[str] = Field(description="List of exceptions to confidential information")
-    duration: str = Field(description="Duration for which the confidentiality obligations last")
-
-class DisputeResolution(BaseModel):
-    method: str = Field(description="Method of dispute resolution (e.g., arbitration, litigation)")
-    venue: str = Field(description="Location or jurisdiction for dispute resolution")
-
-class ParsedNDA(BaseModel):
-    parties: List[PartyInfo] = Field(description="List of all parties involved in the NDA")
-    effective_date: datetime = Field(description="The effective date of the NDA")
-    nda_term: NDATerm = Field(description="The term or duration of the NDA")
-    confidentiality_provision: ConfidentialityProvision = Field(description="Details about the confidentiality clause")
-    governing_law: str = Field(description="The governing law or jurisdiction for the NDA")
-    purpose: str = Field(description="The purpose or context of the NDA")
-    permitted_use: str = Field(description="Specific allowed uses of confidential information")
-    non_solicitation: bool = Field(description="Whether the NDA includes a non-solicitation clause")
-    non_compete: bool = Field(description="Whether the NDA includes a non-compete clause")
-    intellectual_property: str = Field(description="Provisions related to intellectual property rights")
-    return_of_information: str = Field(description="Requirements for returning or destroying confidential information")
-    dispute_resolution: DisputeResolution = Field(description="Details about dispute resolution procedures")
-    amendments: str = Field(description="Provisions for making amendments to the agreement")
-    severability: bool = Field(description="Whether the NDA includes a severability clause")
+def create_models_from_schema(schema: Dict[str, Any]) -> Dict[str, BaseModel]:
+    models = {}
+    for model_name, model_schema in schema.items():
+        models[model_name] = create_pydantic_model(model_name, model_schema)
+    return models
 
 def make_llm_whisperer_call(file_path):
     print(f"Processing file:{file_path}...")
@@ -57,7 +37,6 @@ def make_llm_whisperer_call(file_path):
     client = LLMWhispererClient()
     result = client.whisper(file_path=file_path, processing_mode="ocr", output_mode="line-printer")
     return result["extracted_text"]
-
 
 def generate_cache_file_name(file_path):
     # For our use case, PDFs won't be less than 4096, practically speaking.
@@ -74,7 +53,6 @@ def generate_cache_file_name(file_path):
     last_md5_hash = hashlib.md5(last_block).hexdigest()
     return f"/tmp/{first_md5_hash}_{last_md5_hash}.txt"
 
-
 def is_file_cached(file_path):
     cache_file_name = generate_cache_file_name(file_path)
     cache_file = Path(cache_file_name)
@@ -82,7 +60,6 @@ def is_file_cached(file_path):
         return True
     else:
         return False
-
 
 def extract_text(file_path):
     if is_file_cached(file_path):
@@ -97,15 +74,12 @@ def extract_text(file_path):
             f.write(data)
         return data
 
-
 def error_exit(error_message):
     print(error_message)
     sys.exit(1)
 
-
 def show_usage_and_exit():
-    error_exit("Please pass name of directory or file to process.")
-
+    error_exit("Usage: python script.py <path_to_pdf_or_directory> <schema_file_name>")
 
 def enumerate_pdf_files(file_path):
     files_to_process = []
@@ -125,58 +99,62 @@ def enumerate_pdf_files(file_path):
 
     return files_to_process
 
+def extract_values_from_file(raw_file_data, models, prompt_config):
+    system_template = prompt_config['system_message']
+    human_template = prompt_config['human_message']
 
-def extract_values_from_file(raw_file_data):
-    preamble = ("\n"
-                "Your task is to accurately extract and summarize key information from Non-Disclosure Agreements (NDAs), "
-                "including multi-party NDAs. Pay close attention to the NDA's language, structure, and any cross-references "
-                "to ensure a comprehensive and precise extraction of information. Identify all parties involved, their roles, "
-                "and any specific terms that apply to each party. Do not use prior knowledge or information from outside the "
-                "context to answer the questions. Only use the information provided in the context to answer the questions.\n")
-    postamble = "Do not include any explanation in the reply. Only include the extracted information in the reply."
-    system_template = "{preamble}"
     system_message_prompt = SystemMessagePromptTemplate.from_template(system_template)
-    human_template = "{format_instructions}\n{raw_file_data}\n{postamble}"
     human_message_prompt = HumanMessagePromptTemplate.from_template(human_template)
 
-    parser = PydanticOutputParser(pydantic_object=ParsedNDA)
+    parser = PydanticOutputParser(pydantic_object=models['ParsedNDA'])
     print(parser.get_format_instructions())
 
     # compile chat template
     chat_prompt = ChatPromptTemplate.from_messages([system_message_prompt, human_message_prompt])
-    request = chat_prompt.format_prompt(preamble=preamble,
-                                        format_instructions=parser.get_format_instructions(),
-                                        raw_file_data=raw_file_data,
-                                        postamble=postamble).to_messages()
-    model = ChatOpenAI()
+    request = chat_prompt.format_prompt(format_instructions=parser.get_format_instructions(),
+                                        raw_file_data=raw_file_data)
+
+    model = ChatOpenAI(temperature=prompt_config['temperature'])
     print("Querying model...")
-    result = model(request, temperature=0)
+    result = model(request.to_messages())
     print("Response from model:")
     print(result.content)
     return result.content
 
-
-def process_pdf_files(file_list):
+def process_pdf_files(file_list, models, prompt_config):
     for file_path in file_list:
         raw_file_data = extract_text(file_path)
         print(f"Extracted text for file {file_path}:\n{raw_file_data}")
-        extracted_json = extract_values_from_file(raw_file_data)
+        extracted_json = extract_values_from_file(raw_file_data, models, prompt_config)
         json_file_path = f"{file_path}.json"
         with open(json_file_path, "w") as f:
             f.write(extracted_json)
 
-
 def main():
     load_dotenv()
-    if len(sys.argv) < 2:
+    if len(sys.argv) != 3:
         show_usage_and_exit()
 
-    print(f"Processing path {sys.argv[1]}...")
-    file_list = enumerate_pdf_files(sys.argv[1])
-    print(f"Processing {len(file_list)} files...")
-    print(f"Processing first file: {file_list[0]}...")
-    process_pdf_files(file_list)
+    pdf_path = sys.argv[1]
+    schema_file_name = sys.argv[2]
 
+    # Load the schema and create models
+    schema_path = os.path.join('schemas', 'definitions', schema_file_name)
+    schema = load_json_file(schema_path)
+    models = create_models_from_schema(schema)
+
+    # Load the prompt configuration
+    prompt_config_path = os.path.join('schemas', 'prompts', schema_file_name)
+    prompt_config = load_json_file(prompt_config_path)
+
+    print(f"Processing path {pdf_path}...")
+    file_list = enumerate_pdf_files(pdf_path)
+    print(f"Processing {len(file_list)} files...")
+    if file_list:
+        print(f"Processing first file: {file_list[0]}...")
+        process_pdf_files(file_list, models, prompt_config)
+    else:
+        print("No PDF files found to process.")
 
 if __name__ == '__main__':
     main()
