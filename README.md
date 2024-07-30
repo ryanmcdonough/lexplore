@@ -16,7 +16,7 @@ You'll need API keys for OpenAI and [LLMWhisperer](https://unstract.com/llmwhisp
 
 ```
 project_root/
-├── nda_extractor.py
+├── extract.py
 ├── schemas/
 │   ├── definitions/
 │   │   └── nda.json
