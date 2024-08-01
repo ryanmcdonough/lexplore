@@ -1,4 +1,4 @@
-# Extracting Structured JSON from NDAs with Langchain and Pydantic
+# Extracting Structured JSON from Documents with Langchain and Pydantic
 
 This repository contains code for extracting structured data from multi-party Non-Disclosure Agreements (NDAs) using Large Language Models (LLMs). We use Langchain to create prompts and Pydantic to ensure the extracted data conforms to our defined schema.
 
@@ -6,7 +6,7 @@ Based on https://github.com/Zipstack/structured-extraction
 
 ## Supported operating systems
 
-This code should run on Linux, macOS. Windows is untested, however work is on to solved this.
+This code should run on Linux, macOS. Windows is untested, however work is on to solve this.
 
 ## Required API Keys
 
