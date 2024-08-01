@@ -1,4 +1,4 @@
-![https://media.githubusercontent.com/media/ryanmcdonough/lexplore/main/assets/logo.png]
+![Logo](https://media.githubusercontent.com/media/ryanmcdonough/lexplore/main/assets/logo.png)
 
 # Extracting Structured JSON from Documents with Langchain and Pydantic
 
